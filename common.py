@@ -48,6 +48,7 @@ def report_timings_cql(func):
     return wrapper
 
 
+# TODO: remove this duplicate
 def report_timings_dynamodb(func):
     @wraps(func)
     def wrapper(*args, **kwargs):

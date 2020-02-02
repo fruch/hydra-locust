@@ -5,7 +5,7 @@ import numpy as np
 from locust import TaskSet, between, task
 
 import prom_collector  # pylint: disable=unused-import
-from common import CqlLocust, report_timings
+from common import CqlLocust, report_timings_cql
 
 KEYS = cycle(range(1, 10000))
 READ = cycle(iter(np.random.zipf(2, size=10000)))
@@ -30,7 +30,7 @@ class CqlTaskSet(TaskSet):
         """)
         self.session.execute("USE keyspace1")
 
-    @report_timings
+    @report_timings_cql
     @task(10)
     def insert(self):
         self.session.execute(
@@ -41,7 +41,7 @@ class CqlTaskSet(TaskSet):
             (next(KEYS).to_bytes(10, byteorder='big'), uuid.uuid1().bytes)
         )
 
-    @report_timings
+    @report_timings_cql
     @task(5)
     def read(self):
         self.session.execute(
