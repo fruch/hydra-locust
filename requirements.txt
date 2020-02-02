@@ -1,0 +1,4 @@
+locust
+boto3
+numpy
+prometheus-client==0.7.1
