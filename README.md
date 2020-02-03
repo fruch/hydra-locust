@@ -29,3 +29,13 @@ python -m cProfile -o benchmark.prof benchmark.py
 
 runshake benchmark.prof
 ```
+
+
+# building dockr image
+
+```bash
+export HYDRA_LOCUST_IMAGE=scylladb/hydra-loaders:locust-py3-$(date +'%Y%m%d')
+docker build . -t ${HYDRA_LOCUST_IMAGE}
+docker push ${HYDRA_LOCUST_IMAGE}
+echo "${HYDRA_LOCUST_IMAGE}" > image
+```

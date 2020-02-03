@@ -1,4 +1,6 @@
-locust
-boto3
-numpy
+locustio==0.14.2
+boto3==1.11.9
+numpy==1.18.1
 prometheus-client==0.7.1
+# until https://github.com/boto/botocore/pull/1956 would be accepted
+https://github.com/fruch/botocore/archive/hooks_speedups.zip
