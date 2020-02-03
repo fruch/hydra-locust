@@ -33,9 +33,9 @@ class CqlTaskSet(TaskSet):
         self.session.execute("USE keyspace1")
 
         self.insert_stmt = self.session.prepare("INSERT INTO standard1 (key, C0) VALUES (?, ?)")
-        self.insert_stmt.consistency_level = ConsistencyLevel.QUORUM
+        self.insert_stmt.consistency_level = ConsistencyLevel.LOCAL_ONE
         self.read_stmt = self.session.prepare("SELECT * FROM standard1 WHERE key=?")
-        self.read_stmt.consistency_level = ConsistencyLevel.QUORUM
+        self.read_stmt.consistency_level = ConsistencyLevel.LOCAL_ONE
 
     @report_timings_cql
     @task(10)
