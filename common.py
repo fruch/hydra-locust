@@ -1,8 +1,10 @@
+import logging
+import sys
 import time
 from functools import wraps
 
 import boto3
-
+import botocore
 from locust import Locust, events
 from cassandra.cluster import Cluster
 from cassandra.policies import DCAwareRoundRobinPolicy
@@ -28,7 +30,11 @@ class DynamodbLocust(Locust):  # pylint: disable=too-few-public-methods
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.client = boto3.resource('dynamodb', endpoint_url=self.host)
+        self.config = botocore.config.Config(signature_version=botocore.UNSIGNED,
+                                             max_pool_connections=50, inject_host_prefix=False, parameter_validation=False)
+
+    def dynamodb_client(self):
+        return boto3.resource('dynamodb', endpoint_url=self.host, use_ssl=False, verify=False, config=self.config)
 
 
 def report_timings_cql(func):
@@ -56,9 +62,10 @@ def report_timings_dynamodb(func):
         try:
             result = func(*args, **kwargs)  # pylint: disable=unused-variable
         except Exception as exp:  # pylint: disable=broad-except
+            logging.exception("failure")
             total_time = int((time.time() - start_time) * 1000)
             events.request_failure.fire(request_type="dynamodb", name=func.__name__,
-                                        response_time=total_time, response_length=0, exception=exp)
+                                        response_time=total_time, response_length=0, exception=exp, tb=sys.exc_info()[2])
         else:
             total_time = int((time.time() - start_time) * 1000)
             events.request_success.fire(request_type="dynamodb", name=func.__name__,
