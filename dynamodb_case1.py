@@ -72,5 +72,5 @@ class DynamodbTaskSet(TaskSet):
 
 
 class ApiUser(DynamodbLocust):  # pylint: disable=too-few-public-methods
-    wait_time = between(0.00001, 0.0005)
+    wait_time = between(0.00001, 0.00005)
     task_set = DynamodbTaskSet

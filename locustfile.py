@@ -1,14 +1,13 @@
-import uuid
 from itertools import cycle
 
 import numpy as np
 from locust import TaskSet, between, task
 
 import prom_collector  # pylint: disable=unused-import
-from common import CqlLocust, report_timings_cql
+from common import CqlLocust, report_timings_cql, iter_zipf, iter_shuffle
 
-KEYS = cycle(range(1, 10000))
-READ = cycle(iter(np.random.zipf(2, size=10000)))
+KEYS = cycle(iter_shuffle(range(1, 10000)))
+READ = iter_zipf(10000, 2.0, num_samples=100)
 
 
 class CqlTaskSet(TaskSet):
@@ -33,20 +32,27 @@ class CqlTaskSet(TaskSet):
     @report_timings_cql
     @task(10)
     def insert(self):
+        key = next(KEYS)
+        np.random.seed(key)
+
         self.session.execute(
             """
             INSERT INTO standard1 (key, C0)
             VALUES (%s, %s)
             """,
-            (next(KEYS).to_bytes(10, byteorder='big'), uuid.uuid1().bytes)
+            (key.to_bytes(10, byteorder='big'), np.random.bytes(64))
         )
 
     @report_timings_cql
     @task(5)
     def read(self):
-        self.session.execute(
-            "SELECT * FROM standard1 WHERE key=%s", (int(next(READ)).to_bytes(10, byteorder='big'), )
+        key = next(READ)
+        np.random.seed(key)
+        data = np.random.bytes(64)
+        res = self.session.execute(
+            "SELECT * FROM standard1 WHERE key=%s", (int(key).to_bytes(10, byteorder='big'), )
         )
+        assert res.one().c0 == data, f"key={int(key)} data validation failed"
 
 
 class ApiUser(CqlLocust):  # pylint: disable=too-few-public-methods
