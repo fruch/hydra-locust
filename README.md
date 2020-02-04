@@ -30,8 +30,7 @@ python -m cProfile -o benchmark.prof benchmark.py
 runshake benchmark.prof
 ```
 
-
-# building dockr image
+## building dockr image
 
 ```bash
 export HYDRA_LOCUST_IMAGE=scylladb/hydra-loaders:locust-py3-$(date +'%Y%m%d')

@@ -9,7 +9,7 @@ import boto3
 import botocore
 from locust import Locust, events
 from cassandra.cluster import Cluster
-from cassandra.policies import DCAwareRoundRobinPolicy
+from cassandra.policies import WhiteListRoundRobinPolicy
 
 
 class CqlLocust(Locust):  # pylint: disable=too-few-public-methods
@@ -20,8 +20,9 @@ class CqlLocust(Locust):  # pylint: disable=too-few-public-methods
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.client = Cluster([self.host], protocol_version=4,
-                              load_balancing_policy=DCAwareRoundRobinPolicy(local_dc='datacenter1'))
+        addresses = [a.strip() for a in self.host.split(',')]
+        self.client = Cluster(addresses, protocol_version=4,
+                              load_balancing_policy=WhiteListRoundRobinPolicy(addresses))
 
 
 class DynamodbLocust(Locust):  # pylint: disable=too-few-public-methods
