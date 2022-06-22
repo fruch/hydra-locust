@@ -1,6 +1,6 @@
 locustio==0.14.2
 boto3==1.11.9
-numpy==1.18.1
+numpy==1.22.0
 prometheus-client==0.7.1
 cassandra-driver==3.21.0
 aioboto3==6.4.1
