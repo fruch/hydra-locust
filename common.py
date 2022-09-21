@@ -1,43 +1,49 @@
 import logging
+import random
+import subprocess
 import sys
 import time
 from functools import wraps
-import random
 
+import configargparse
 import numpy as np
-import boto3
-import botocore
-from locust import Locust, events
-from cassandra.cluster import Cluster
-from cassandra.policies import WhiteListRoundRobinPolicy
+from locust import events
 
 
-class CqlLocust(Locust):  # pylint: disable=too-few-public-methods
-    """
-    This is the abstract Locust class which should be subclassed. It provides an CQL client
-    that can be used to make CQL requests that will be tracked in Locust's statistics.
-    """
+@events.init_command_line_parser.add_listener
+def add_checks_arguments(parser: configargparse.ArgumentParser):
+    processes = parser.add_argument_group("start multiple worker processes")
+    processes.add_argument(
+        "--processes",
+        "-p",
+        action="store_true",
+        help="start slave processes to start",
+        env_var="LOCUST_PROCESSES",
+        default=False,
+    )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        addresses = [a.strip() for a in self.host.split(',')]
-        self.client = Cluster(addresses, protocol_version=4,
-                              load_balancing_policy=WhiteListRoundRobinPolicy(addresses))
 
-
-class DynamodbLocust(Locust):  # pylint: disable=too-few-public-methods
-    """
-    This is the abstract Locust class which should be subclassed. It provides an dynamodb client
-    that can be used to make dynamodb requests that will be tracked in Locust's statistics.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.config = botocore.config.Config(signature_version=botocore.UNSIGNED,
-                                             max_pool_connections=50, inject_host_prefix=False, parameter_validation=False)
-
-    def dynamodb_client(self):
-        return boto3.resource('dynamodb', endpoint_url=self.host, use_ssl=False, verify=False, config=self.config)
+@events.init.add_listener
+def on_locust_init(environment):
+    if (
+        environment.parsed_options.processes
+        and environment.parsed_options.master
+        and environment.parsed_options.expect_workers
+    ):
+        environment.worker_processes = []
+        for _ in range(environment.parsed_options.expect_workers):
+            args = [*sys.argv]
+            args.remove("--master")
+            args.remove("--processes")
+            args.remove("--headless")
+            i = args.index("--expect-workers")
+            args.pop(i)
+            args.pop(i)
+            args = args[:5]
+            p = subprocess.Popen(  # pylint: disable=consider-using-with
+                args[:5] + ["--worker"], text=True, start_new_session=True
+            )
+            environment.worker_processes.append(p)
 
 
 def report_timings_cql(func):
@@ -48,12 +54,22 @@ def report_timings_cql(func):
             result = func(*args, **kwargs)  # pylint: disable=unused-variable
         except Exception as exp:  # pylint: disable=broad-except
             total_time = int((time.time() - start_time) * 1000)
-            events.request_failure.fire(request_type="cql", name=func.__name__,
-                                        response_time=total_time, response_length=0, exception=exp)
+            events.request_failure.fire(
+                request_type="cql",
+                name=func.__name__,
+                response_time=total_time,
+                response_length=0,
+                exception=exp,
+            )
         else:
             total_time = int((time.time() - start_time) * 1000)
-            events.request_success.fire(request_type="cql", name=func.__name__,
-                                        response_time=total_time, response_length=0)
+            events.request_success.fire(
+                request_type="cql",
+                name=func.__name__,
+                response_time=total_time,
+                response_length=0,
+            )
+
     return wrapper
 
 
@@ -67,12 +83,23 @@ def report_timings_dynamodb(func):
         except Exception as exp:  # pylint: disable=broad-except
             logging.exception("failure")
             total_time = int((time.time() - start_time) * 1000)
-            events.request_failure.fire(request_type="dynamodb", name=func.__name__,
-                                        response_time=total_time, response_length=0, exception=exp, tb=sys.exc_info()[2])
+            events.request_failure.fire(
+                request_type="dynamodb",
+                name=func.__name__,
+                response_time=total_time,
+                response_length=0,
+                exception=exp,
+                tb=sys.exc_info()[2],
+            )
         else:
             total_time = int((time.time() - start_time) * 1000)
-            events.request_success.fire(request_type="dynamodb", name=func.__name__,
-                                        response_time=total_time, response_length=0)
+            events.request_success.fire(
+                request_type="dynamodb",
+                name=func.__name__,
+                response_time=total_time,
+                response_length=0,
+            )
+
     return wrapper
 
 
@@ -86,7 +113,7 @@ def iter_shuffle(iterable, bufsize=1000):
     buf = []
     try:
         while True:
-            for _ in range(random.randint(1, bufsize-len(buf))):
+            for _ in range(random.randint(1, bufsize - len(buf))):
                 buf.append(next(iterable))
             random.shuffle(buf)
             for _ in range(random.randint(1, bufsize)):
@@ -105,7 +132,7 @@ def iter_zipf(n, alpha, num_samples):
     # idea from https://stackoverflow.com/q/31027739/459189
 
     # Calculate Zeta values from 1 to n:
-    tmp = np.power(np.arange(1, n+1), -alpha)
+    tmp = np.power(np.arange(1, n + 1), -alpha)
     zeta = np.r_[0.0, np.cumsum(tmp)]
     # Store the translation map:
     dist_map = [x / zeta[-1] for x in zeta]
@@ -120,5 +147,5 @@ def iter_zipf(n, alpha, num_samples):
 
 
 if __name__ == "__main__":
-    for i in iter_zipf(10000000, 2.0, 10000):
-        print(i, end=" ")
+    for num in iter_zipf(10000000, 2.0, 10000):
+        print(num, end=" ")

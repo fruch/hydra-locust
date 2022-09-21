@@ -11,13 +11,14 @@ pip install -r requirements.txt
 ## run
 
 ```bash
-docker run -d -p 8080:8080 -p 9042:9042 scylladb/scylla:3.2.0 --alternator-port 8080
+docker run -d -p 8080:8080 -p 9042:9042 scylladb/scylla --alternator-port 8080 --alternator-write-isolation=always
 
 # run dynamodb example
-locust -f dynamodb_case1.py --host http://127.0.0.1:8080 --no-web -c 30 -t 1m  -r 30
+locust -f dynamodb_case1.py --host http://127.0.0.1:8080 --headless --users 30 -t 1m  -r 30
+
 
 # run cql example
-locust -f locustfile.py --host 127.0.0.1 --no-web -c 30 -t 1m  -r 30
+locust -f locustfile.py --host 172.17.0.2 --headless --users 30 -t 1m -r 30
 ```
 
 ## profiling
@@ -30,7 +31,7 @@ python -m cProfile -o benchmark.prof benchmark.py
 runshake benchmark.prof
 ```
 
-## building dockr image
+## building docker image
 
 ```bash
 export HYDRA_LOCUST_IMAGE=scylladb/hydra-loaders:locust-py3-$(date +'%Y%m%d')

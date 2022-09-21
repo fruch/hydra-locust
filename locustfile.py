@@ -1,48 +1,69 @@
 from itertools import cycle
 
 import numpy as np
-from locust import TaskSet, between, task
+from cassandra import ConsistencyLevel
+from cassandra.cluster import Cluster  # pylint: disable=no-name-in-module
+from cassandra.policies import WhiteListRoundRobinPolicy
+from locust import User, between, events, task
 
 import prom_collector  # pylint: disable=unused-import
-from common import CqlLocust, report_timings_cql, iter_zipf, iter_shuffle
-from cassandra import ConsistencyLevel
+from common import iter_shuffle, iter_zipf, report_timings_cql
 
 KEYS = cycle(iter_shuffle(range(1, 10000)))
 READ = iter_zipf(10000, 2.0, num_samples=100)
 
 
-class CqlTaskSet(TaskSet):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.session = None
-        self.insert_stmt = None
-        self.read_stmt = None
+@events.test_start.add_listener
+def on_test_start(environment):
+    addresses = [a.strip() for a in environment.host.split(",")]
+    environment.client = Cluster(
+        addresses,
+        protocol_version=4,
+        load_balancing_policy=WhiteListRoundRobinPolicy(addresses),
+    )
 
-    def on_start(self):
-        self.session = self.client.connect()
-        self.session.execute("""
-            CREATE KEYSPACE IF NOT EXISTS keyspace1
-            WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '3'} AND durable_writes = true;
-        """)
-        self.session.execute("""
-            CREATE TABLE IF NOT EXISTS keyspace1.standard1 (
-                key blob PRIMARY KEY,
-                C0 blob
-            ) WITH compaction = {'class': 'SizeTieredCompactionStrategy'}
-        """)
-        self.session.execute("USE keyspace1")
+    environment.session = environment.client.connect()
+    environment.session.execute(
+        """
+        CREATE KEYSPACE IF NOT EXISTS keyspace1
+        WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'} AND durable_writes = true;
+    """
+    )
+    environment.session.execute(
+        """
+        CREATE TABLE IF NOT EXISTS keyspace1.standard1 (
+            key blob PRIMARY KEY,
+            C0 blob
+        ) WITH compaction = {'class': 'SizeTieredCompactionStrategy'}
+    """
+    )
+    environment.session.execute("USE keyspace1")
 
-        self.insert_stmt = self.session.prepare("INSERT INTO standard1 (key, C0) VALUES (?, ?)")
-        self.insert_stmt.consistency_level = ConsistencyLevel.LOCAL_ONE
-        self.read_stmt = self.session.prepare("SELECT * FROM standard1 WHERE key=?")
-        self.read_stmt.consistency_level = ConsistencyLevel.LOCAL_ONE
+    environment.insert_stmt = environment.session.prepare(
+        "INSERT INTO standard1 (key, C0) VALUES (?, ?)"
+    )
+    environment.insert_stmt.consistency_level = ConsistencyLevel.LOCAL_ONE
+    environment.read_stmt = environment.session.prepare(
+        "SELECT * FROM standard1 WHERE key=?"
+    )
+    environment.read_stmt.consistency_level = ConsistencyLevel.LOCAL_ONE
+
+
+class ApiUser(User):  # pylint: disable=too-few-public-methods
+    def __init__(self, environment, **kwargs):
+        super().__init__(environment, **kwargs)
+        self.session = environment.session
+        self.insert_stmt = environment.insert_stmt
+        self.read_stmt = environment.read_stmt
 
     @report_timings_cql
     @task(10)
     def insert(self):
         key = next(KEYS)
         np.random.seed(key)
-        self.session.execute(self.insert_stmt, (key.to_bytes(10, byteorder='big'), np.random.bytes(64)))
+        self.session.execute(
+            self.insert_stmt, (key.to_bytes(10, byteorder="big"), np.random.bytes(64))
+        )
 
     @report_timings_cql
     @task(5)
@@ -50,11 +71,9 @@ class CqlTaskSet(TaskSet):
         key = next(READ)
         np.random.seed(key)
         data = np.random.bytes(64)
-        res = self.session.execute(self.read_stmt, (int(key).to_bytes(10, byteorder='big'), ))
+        res = self.session.execute(
+            self.read_stmt, (int(key).to_bytes(10, byteorder="big"),)
+        )
         assert res.one().c0 == data, f"key={int(key)} data validation failed"
 
-
-class ApiUser(CqlLocust):  # pylint: disable=too-few-public-methods
-
     wait_time = between(0.00001, 0.00005)
-    task_set = CqlTaskSet
