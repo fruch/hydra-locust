@@ -11,7 +11,7 @@ from locust import events
 
 
 @events.init_command_line_parser.add_listener
-def add_checks_arguments(parser: configargparse.ArgumentParser):
+def add_processes_arguments(parser: configargparse.ArgumentParser):
     processes = parser.add_argument_group("start multiple worker processes")
     processes.add_argument(
         "--processes",
@@ -24,24 +24,25 @@ def add_checks_arguments(parser: configargparse.ArgumentParser):
 
 
 @events.init.add_listener
-def on_locust_init(environment):
+def on_locust_init(environment, **kwargs):  # pylint: disable=unused-argument
     if (
         environment.parsed_options.processes
         and environment.parsed_options.master
         and environment.parsed_options.expect_workers
     ):
         environment.worker_processes = []
+        master_args = [*sys.argv]
+        worker_args = [sys.argv[0]]
+        if "-f" in master_args:
+            i = master_args.index("-f")
+            worker_args += [master_args.pop(i), master_args.pop(i)]
+        if "--locustfile" in master_args:
+            i = master_args.index("--locustfile")
+            worker_args += [master_args.pop(i), master_args.pop(i)]
+        worker_args += ["--worker"]
         for _ in range(environment.parsed_options.expect_workers):
-            args = [*sys.argv]
-            args.remove("--master")
-            args.remove("--processes")
-            args.remove("--headless")
-            i = args.index("--expect-workers")
-            args.pop(i)
-            args.pop(i)
-            args = args[:5]
             p = subprocess.Popen(  # pylint: disable=consider-using-with
-                args[:5] + ["--worker"], text=True, start_new_session=True
+                worker_args, start_new_session=True
             )
             environment.worker_processes.append(p)
 
