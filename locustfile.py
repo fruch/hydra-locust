@@ -1,8 +1,14 @@
 from itertools import cycle
 
+# pylint: disable=wrong-import-position
+from gevent import monkey
+
+monkey.patch_all()
+
 import numpy as np
 from cassandra import ConsistencyLevel
 from cassandra.cluster import Cluster  # pylint: disable=no-name-in-module
+from cassandra.io.geventreactor import GeventConnection
 from cassandra.policies import WhiteListRoundRobinPolicy
 from locust import User, between, events, task
 
@@ -20,6 +26,7 @@ def on_test_start(environment):
         addresses,
         protocol_version=4,
         load_balancing_policy=WhiteListRoundRobinPolicy(addresses),
+        connection_class=GeventConnection,
     )
 
     environment.session = environment.client.connect()
@@ -33,18 +40,18 @@ def on_test_start(environment):
         """
         CREATE TABLE IF NOT EXISTS keyspace1.standard1 (
             key blob PRIMARY KEY,
-            C0 blob
+            "C0" blob
         ) WITH compaction = {'class': 'SizeTieredCompactionStrategy'}
     """
     )
     environment.session.execute("USE keyspace1")
 
     environment.insert_stmt = environment.session.prepare(
-        "INSERT INTO standard1 (key, C0) VALUES (?, ?)"
+        'INSERT INTO keyspace1.standard1 (key, "C0") VALUES (?, ?)'
     )
     environment.insert_stmt.consistency_level = ConsistencyLevel.LOCAL_ONE
     environment.read_stmt = environment.session.prepare(
-        "SELECT * FROM standard1 WHERE key=?"
+        "SELECT * FROM keyspace1.standard1 WHERE key=?"
     )
     environment.read_stmt.consistency_level = ConsistencyLevel.LOCAL_ONE
 
@@ -74,6 +81,6 @@ class ApiUser(User):  # pylint: disable=too-few-public-methods
         res = self.session.execute(
             self.read_stmt, (int(key).to_bytes(10, byteorder="big"),)
         )
-        assert res.one().c0 == data, f"key={int(key)} data validation failed"
+        assert res.one().C0 == data, f"key={int(key)} data validation failed"
 
     wait_time = between(0.00001, 0.00005)

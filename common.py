@@ -6,8 +6,16 @@ import time
 from functools import wraps
 
 import configargparse
+import gevent
 import numpy as np
 from locust import events
+from locust.runners import (
+    STATE_CLEANUP,
+    STATE_STOPPED,
+    STATE_STOPPING,
+    LocalRunner,
+    MasterRunner,
+)
 
 
 @events.init_command_line_parser.add_listener
@@ -24,7 +32,7 @@ def add_processes_arguments(parser: configargparse.ArgumentParser):
 
 
 @events.init.add_listener
-def on_locust_init(environment, **kwargs):  # pylint: disable=unused-argument
+def start_workers_on_init(environment, **_kwargs):
     if (
         environment.parsed_options.processes
         and environment.parsed_options.master
@@ -45,6 +53,29 @@ def on_locust_init(environment, **kwargs):  # pylint: disable=unused-argument
                 worker_args, start_new_session=True
             )
             environment.worker_processes.append(p)
+
+
+def checker(environment):
+    while environment.runner.state not in [
+        STATE_STOPPING,
+        STATE_STOPPED,
+        STATE_CLEANUP,
+    ]:
+        time.sleep(5)
+        print(environment.runner.stats.total.num_failures)
+        if environment.runner.stats.total.fail_ratio > 0.1:
+            print(
+                f"fail ratio was {environment.runner.stats.total.fail_ratio}, quitting"
+            )
+            environment.runner.quit()
+            return
+
+
+@events.init.add_listener
+def start_checker_on_init(environment, **_kwargs):
+    # don't run this on workers, we only care about the aggregated numbers
+    if isinstance(environment.runner, (MasterRunner, LocalRunner)):
+        gevent.spawn(checker, environment)
 
 
 def report_timings_cql(func):
