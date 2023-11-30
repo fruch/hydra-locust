@@ -20,6 +20,8 @@ from locust.runners import (
 
 @events.init_command_line_parser.add_listener
 def add_processes_arguments(parser: configargparse.ArgumentParser):
+    parser.add_argument("--keyspace", type=str, default="keyspace1", help="keyspace name")
+    parser.add_argument("--table", type=str, default="standard1", help="table name name")
     processes = parser.add_argument_group("start multiple worker processes")
     processes.add_argument(
         "--processes",
@@ -86,7 +88,7 @@ def report_timings_cql(func):
             result = func(*args, **kwargs)  # pylint: disable=unused-variable
         except Exception as exp:  # pylint: disable=broad-except
             total_time = int((time.time() - start_time) * 1000)
-            events.request_failure.fire(
+            events.request.fire(
                 request_type="cql",
                 name=func.__name__,
                 response_time=total_time,
@@ -95,7 +97,7 @@ def report_timings_cql(func):
             )
         else:
             total_time = int((time.time() - start_time) * 1000)
-            events.request_success.fire(
+            events.request.fire(
                 request_type="cql",
                 name=func.__name__,
                 response_time=total_time,
@@ -115,7 +117,7 @@ def report_timings_dynamodb(func):
         except Exception as exp:  # pylint: disable=broad-except
             logging.exception("failure")
             total_time = int((time.time() - start_time) * 1000)
-            events.request_failure.fire(
+            events.request.fire(
                 request_type="dynamodb",
                 name=func.__name__,
                 response_time=total_time,
@@ -125,7 +127,7 @@ def report_timings_dynamodb(func):
             )
         else:
             total_time = int((time.time() - start_time) * 1000)
-            events.request_success.fire(
+            events.request.fire(
                 request_type="dynamodb",
                 name=func.__name__,
                 response_time=total_time,
