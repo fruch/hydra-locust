@@ -1,6 +1,0 @@
-locust
-boto3
-numpy
-prometheus-client
-scylla-driver
-aioboto3

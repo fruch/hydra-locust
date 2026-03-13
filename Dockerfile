@@ -1,18 +1,21 @@
-FROM python:3.8.1-slim as builder
+FROM python:3.12-slim AS builder
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 RUN apt-get update \
 && apt-get install gcc -y \
 && apt-get clean
-COPY requirements.txt /app/requirements.txt
-WORKDIR app
-RUN pip install --no-cache-dir --user -r requirements.txt
-COPY . /app
+
+WORKDIR /app
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+COPY . .
+RUN uv sync --frozen --no-dev
 
 # Here is the production image
-FROM python:3.8.1-slim as app
-COPY --from=builder /root/.local /root/.local
+FROM python:3.12-slim AS app
 COPY --from=builder /app /app
-WORKDIR app
+WORKDIR /app
 
-ENV PATH=/root/.local/bin:$PATH
+ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1

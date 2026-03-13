@@ -1,0 +1,41 @@
+[project]
+name = "hydra-locust"
+version = "0.1.0"
+description = "Locust-based CQL/DynamoDB load testing tool for ScyllaDB and Cassandra"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "locust>=2.43",
+    "numpy>=2.4",
+    "prometheus-client>=0.24",
+    "scylla-driver>=3.29",
+    "aioboto3>=15.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0",
+    "ruff>=0.15",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# gevent monkey-patching requires imports after patch_all()
+"locustfile.py" = ["E402"]
+"dynamodb_case1.py" = ["E402"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0",
+    "ruff>=0.15",
+]
