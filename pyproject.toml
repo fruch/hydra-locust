@@ -13,12 +13,6 @@ dependencies = [
     "aioboto3>=15.5",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=9.0",
-    "ruff>=0.15",
-]
-
 [tool.ruff]
 line-length = 120
 target-version = "py311"

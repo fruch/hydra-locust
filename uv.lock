@@ -812,12 +812,6 @@ dependencies = [
     { name = "scylla-driver" },
 ]
 
-[package.optional-dependencies]
-dev = [
-    { name = "pytest" },
-    { name = "ruff" },
-]
-
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
@@ -830,11 +824,8 @@ requires-dist = [
     { name = "locust", specifier = ">=2.43" },
     { name = "numpy", specifier = ">=2.4" },
     { name = "prometheus-client", specifier = ">=0.24" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.15" },
     { name = "scylla-driver", specifier = ">=3.29" },
 ]
-provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
 dev = [

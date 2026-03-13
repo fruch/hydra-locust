@@ -97,7 +97,7 @@ def report_timings(request_type):
             try:
                 func(*args, **kwargs)
             except Exception as exp:
-                logging.exception("failure")
+                logging.exception("%s request %s failed", request_type, func.__name__)
                 total_time = int((time.time() - start_time) * 1000)
                 events.request.fire(
                     request_type=request_type,
