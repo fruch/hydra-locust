@@ -87,7 +87,7 @@ class ApiUser(User):  # pylint: disable=too-few-public-methods
             (
                 key.to_bytes(10, byteorder="big"),
                 np.random.bytes(64),
-                (np.random.bytes(16), np.random.bytes(16)),
+                (np.random.bytes(16), np.random.bytes(16)),  # new_fancy_udt(f1, f2)
             ),
         )
 
