@@ -29,7 +29,7 @@
 
 ## 2. Introduce Skill System
 
-Collect and adapt community-built Python skills, using the [coodie](https://github.com/scylladb/coodie) project's skill architecture as a reference model.
+Collect and adapt community-built Python skills, using the [coodie](https://github.com/fruch/coodie) project's skill architecture as a reference model.
 
 - Survey existing community Python skills and workload patterns (coodie, open-source Locust plugins, etc.) and adapt the best ones for hydra-locust
 - Design a **skill** abstraction that encapsulates a reusable workload pattern (e.g. read-heavy, write-heavy, mixed, scan, batch)
@@ -41,7 +41,7 @@ Collect and adapt community-built Python skills, using the [coodie](https://gith
 
 ## 3. Introduce Tests, Integration Tests, and Benchmarks
 
-Follow the [coodie](https://github.com/scylladb/coodie) project's testing approach as a reference — it demonstrates well-structured unit tests, integration tests, and benchmarks for a driver/load-testing tool.
+Follow the [coodie](https://github.com/fruch/coodie) project's testing approach as a reference — it demonstrates well-structured unit tests, integration tests, and benchmarks for a driver/load-testing tool.
 
 ### 3.1 Unit Tests
 
@@ -73,7 +73,7 @@ Follow the [coodie](https://github.com/scylladb/coodie) project's testing approa
 
 Building on the pluggable-driver interface from Section 4:
 
-- Implement a [coodie](https://github.com/scylladb/coodie) (Rust-based) driver adapter
+- Implement a [coodie](https://github.com/fruch/coodie) (Rust-based) driver adapter
 - Provide example workloads that exercise coodie-specific features (e.g. shard-aware routing)
 - Benchmark coodie vs. scylla-driver under identical workloads and publish results
 - Document setup, installation, and usage of coodie within hydra-locust
