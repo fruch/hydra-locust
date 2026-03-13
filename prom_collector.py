@@ -55,7 +55,7 @@ class LocustCollector:  # pylint: disable=too-few-public-methods
                 mtype = "counter"
             metric = Metric("locust_requests_" + mtr, "Locust requests " + mtr, mtype)
             for stat in stats:
-                if not "Aggregated" in stat["name"]:
+                if "Aggregated" not in stat["name"]:
                     metric.add_sample(
                         "locust_requests_" + mtr,
                         value=stat[mtr],

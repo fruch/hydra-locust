@@ -5,12 +5,12 @@ monkey.patch_all()  # noqa
 
 from itertools import cycle
 
+import numpy as np
 from cassandra import ConsistencyLevel
 from cassandra.cluster import Cluster  # pylint: disable=no-name-in-module
 from cassandra.io.geventreactor import GeventConnection
 from cassandra.policies import WhiteListRoundRobinPolicy
 from locust import User, between, events, task
-import numpy as np
 
 # import prom_collector  # pylint: disable=unused-import
 from common import iter_shuffle, iter_zipf, report_timings_cql

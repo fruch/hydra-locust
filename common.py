@@ -80,63 +80,50 @@ def start_checker_on_init(environment, **_kwargs):
         gevent.spawn(checker, environment)
 
 
-def report_timings_cql(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        try:
-            result = func(*args, **kwargs)  # pylint: disable=unused-variable
-        except Exception as exp:  # pylint: disable=broad-except
-            total_time = int((time.time() - start_time) * 1000)
-            events.request.fire(
-                request_type="cql",
-                name=func.__name__,
-                response_time=total_time,
-                response_length=0,
-                exception=exp,
-            )
-        else:
-            total_time = int((time.time() - start_time) * 1000)
-            events.request.fire(
-                request_type="cql",
-                name=func.__name__,
-                response_time=total_time,
-                response_length=0,
-                exception=None,
-            )
+def report_timings(request_type):
+    """Decorator factory that reports function execution timings to Locust.
 
-    return wrapper
+    Usage::
+
+        @report_timings("cql")
+        def my_query(self):
+            ...
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            try:
+                func(*args, **kwargs)
+            except Exception as exp:
+                logging.exception("failure")
+                total_time = int((time.time() - start_time) * 1000)
+                events.request.fire(
+                    request_type=request_type,
+                    name=func.__name__,
+                    response_time=total_time,
+                    response_length=0,
+                    exception=exp,
+                )
+            else:
+                total_time = int((time.time() - start_time) * 1000)
+                events.request.fire(
+                    request_type=request_type,
+                    name=func.__name__,
+                    response_time=total_time,
+                    response_length=0,
+                    exception=None,
+                )
+
+        return wrapper
+
+    return decorator
 
 
-# TODO: remove this duplicate
-def report_timings_dynamodb(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        try:
-            result = func(*args, **kwargs)  # pylint: disable=unused-variable
-        except Exception as exp:  # pylint: disable=broad-except
-            logging.exception("failure")
-            total_time = int((time.time() - start_time) * 1000)
-            events.request.fire(
-                request_type="dynamodb",
-                name=func.__name__,
-                response_time=total_time,
-                response_length=0,
-                exception=exp,
-                tb=sys.exc_info()[2],
-            )
-        else:
-            total_time = int((time.time() - start_time) * 1000)
-            events.request.fire(
-                request_type="dynamodb",
-                name=func.__name__,
-                response_time=total_time,
-                response_length=0,
-                exception=None,
-            )
-
-    return wrapper
+# Convenience aliases for backward compatibility
+report_timings_cql = report_timings("cql")
+report_timings_dynamodb = report_timings("dynamodb")
 
 
 def iter_shuffle(iterable, bufsize=1000):
@@ -161,7 +148,7 @@ def iter_shuffle(iterable, bufsize=1000):
         random.shuffle(buf)
         while buf:
             yield buf.pop()
-            return
+        return
 
 
 def iter_zipf(n, alpha, num_samples):

@@ -12,22 +12,9 @@ repos:
     -   id: detect-aws-credentials
     -   id: detect-private-key
 
--   repo: https://github.com/pycqa/isort
-    rev: 5.10.1
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.6
     hooks:
-      - id: isort
-        name: isort (python)
-
--   repo: https://github.com/psf/black
-    rev: 22.8.0
-    hooks:
-      - id: black
-        language: system
-
--   repo: local
-    hooks:
-    -   id: pylint
-        name: pylint
-        entry: pylint -j 2 -d consider-using-f-string
-        language: system
-        types: [python]
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format

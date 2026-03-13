@@ -14,7 +14,7 @@ import numpy as np
 from botocore.errorfactory import ClientError
 from locust import User, between, events, run_single_user, task
 
-import prom_collector  # pylint: disable=unused-import
+import prom_collector  # noqa: F401
 from common import report_timings_dynamodb
 
 KEYS = cycle(range(1, 1000000))
