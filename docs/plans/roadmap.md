@@ -29,14 +29,19 @@
 
 ## 2. Introduce Skill System
 
+Collect and adapt community-built Python skills, using the [coodie](https://github.com/scylladb/coodie) project's skill architecture as a reference model.
+
+- Survey existing community Python skills and workload patterns (coodie, open-source Locust plugins, etc.) and adapt the best ones for hydra-locust
 - Design a **skill** abstraction that encapsulates a reusable workload pattern (e.g. read-heavy, write-heavy, mixed, scan, batch)
 - Allow users to compose skills declaratively (YAML / TOML config or Python API)
-- Ship a library of built-in skills for common Cassandra / DynamoDB workloads
+- Ship a library of built-in skills for common Cassandra / DynamoDB workloads, seeded from community examples
 - Support user-defined custom skills loaded from external modules
 
 ---
 
 ## 3. Introduce Tests, Integration Tests, and Benchmarks
+
+Follow the [coodie](https://github.com/scylladb/coodie) project's testing approach as a reference — it demonstrates well-structured unit tests, integration tests, and benchmarks for a driver/load-testing tool.
 
 ### 3.1 Unit Tests
 
@@ -45,12 +50,12 @@
 
 ### 3.2 Integration Tests
 
-- Stand up a ScyllaDB / Cassandra container in CI and run end-to-end Locust scenarios against it
+- Stand up a ScyllaDB / Cassandra container in CI and run end-to-end Locust scenarios against it (similar to coodie's integration test setup)
 - Stand up a DynamoDB-compatible container (e.g. ScyllaDB Alternator or DynamoDB Local) for DynamoDB integration tests
 
 ### 3.3 Benchmarks
 
-- Create reproducible micro-benchmarks for the driver layer and data-generation helpers
+- Create reproducible micro-benchmarks for the driver layer and data-generation helpers, modeled on coodie's benchmark suite
 - Track benchmark results over time to detect performance regressions
 
 ---
