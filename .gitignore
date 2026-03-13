@@ -133,3 +133,5 @@ dmypy.json
 .envrc
 # vscode
 .vscode/
+# idea
+.idea/
