@@ -1,0 +1,42 @@
+{
+  "project": "hydra-locust",
+  "last_updated": "2026-03-14",
+  "phases": [
+    {
+      "id": 1,
+      "name": "Foundation",
+      "description": "Modernize build system, add tests and CI",
+      "sub_plans": ["SP1", "SP3"],
+      "status": "in_progress",
+      "started_date": "2026-03-01",
+      "completed_date": null
+    },
+    {
+      "id": 2,
+      "name": "Skill System & Drivers",
+      "description": "Skill abstraction, pluggable drivers, coodie support",
+      "sub_plans": ["SP2", "SP4", "SP5"],
+      "status": "not_started",
+      "started_date": null,
+      "completed_date": null
+    },
+    {
+      "id": 3,
+      "name": "Advanced Features",
+      "description": "Latte-like features, performance review, script conversion",
+      "sub_plans": ["SP6", "SP7", "SP8"],
+      "status": "not_started",
+      "started_date": null,
+      "completed_date": null
+    },
+    {
+      "id": 4,
+      "name": "Observability & Integration",
+      "description": "HDR histograms, Prometheus, unified CLI",
+      "sub_plans": ["SP9", "SP10", "SP11"],
+      "status": "not_started",
+      "started_date": null,
+      "completed_date": null
+    }
+  ]
+}
