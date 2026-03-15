@@ -2,7 +2,7 @@
 
 > Parent: [high-level-design.md](high-level-design.md) | Phase 1
 >
-> **Status: IN PROGRESS** — Unit tests for common.py complete (2026-03-14)
+> **Status: IN PROGRESS** — Unit tests for common.py complete (2026-03-14); CI workflow added (2026-03-15)
 >
 > **This is a living document.** Update it as development progresses.
 
@@ -63,9 +63,9 @@ Establish a comprehensive testing strategy covering unit tests, integration test
 
 ### Phase 3.4: CI Integration
 
-| # | Task | Description | Validation |
-|---|------|-------------|------------|
-| 3.4.1 | GitHub Actions workflow | Run lint + unit tests on every PR | Workflow passes |
+| # | Task | Description | Validation | Status |
+|---|------|-------------|------------|--------|
+| 3.4.1 | GitHub Actions workflow | Run lint + unit tests on every PR | Workflow passes | ✅ Done |
 | 3.4.2 | Integration test workflow | Run integration tests on merge to main | Workflow passes |
 | 3.4.3 | Benchmark workflow | Run benchmarks on demand or weekly | Results published |
 
